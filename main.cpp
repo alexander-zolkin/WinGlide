@@ -2,7 +2,9 @@
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 #include <QDebug>
+#include <QTimer>
 #include "hotkeyhandler.h"
+#include "windowpositioncontroller.h"
 
 int main(int argc, char *argv[])
 {
@@ -11,8 +13,22 @@ int main(int argc, char *argv[])
     HotkeyHandler hotkeyHandler;
     QGuiApplication::instance()->installNativeEventFilter(&hotkeyHandler);
 
-    hotkeyHandler.registerHotKey(MOD_WIN | MOD_ALT, 'V', 1);
-    hotkeyHandler.registerHotKey(MOD_WIN | MOD_ALT, 'C', 2);
+    WindowPositionController wpc;
+
+    if (!hotkeyHandler.registerHotKey(MOD_WIN | MOD_ALT, 'V', 1)) {
+        auto lastError = GetLastError();
+        qDebug() << "Не удалось зарегистрировать горячую клавишу Win+Alt+V. Код ошибки:" << lastError;
+    }
+
+    if (!hotkeyHandler.registerHotKey(MOD_WIN | MOD_ALT, 'C', 2)) {
+        auto lastError = GetLastError();
+        qDebug() << "Не удалось зарегистрировать горячую клавишу Win+Alt+C. Код ошибки:" << lastError;
+    }
+
+    if (!hotkeyHandler.registerHotKey(0, VK_ESCAPE, 3)) {
+        auto lastError = GetLastError();
+        qDebug() << "Не удалось зарегистрировать горячую клавишу Escape. Код ошибки:" << lastError;
+    }
 
     QQmlApplicationEngine engine;
     QObject::connect(
@@ -23,59 +39,9 @@ int main(int argc, char *argv[])
         Qt::QueuedConnection);
     engine.loadFromModule("WinGlide", "Main");
 
-    QObject::connect(&hotkeyHandler, &HotkeyHandler::moveHotKeyPressed, [&](){
-        qDebug() << "Move hotkey pressed!";
-
-        HWND hwnd = GetForegroundWindow();
-        if (!hwnd) return;
-        // SendMessage(hwnd, WM_SYSCOMMAND, SC_MOVE, 0);
-
-        RECT window_rect;
-        if (!GetWindowRect(hwnd, &window_rect)) return;
-
-        // Getting the height of the window title
-        const int title_height = GetSystemMetrics(SM_CYCAPTION) +
-                                 GetSystemMetrics(SM_CYSIZEFRAME) +
-                                 GetSystemMetrics(SM_CXPADDEDBORDER);
-
-        // Calculating the coordinates of the center of the header
-        const int center_x = (window_rect.left + window_rect.right) / 2;
-        const int center_y = window_rect.top + (title_height / 2);
-
-        // Setting the cursor position
-        SetCursorPos(center_x, center_y);
-        // Most likely it would be better to move window with mouse
-        // SetWindowPos(hwnd, NULL, 100, 100, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
-
-        INPUT inputs[2] = {0};
-
-        // Clicking the left mouse button
-        inputs[0].type = INPUT_MOUSE;
-        inputs[0].mi.dwFlags = MOUSEEVENTF_LEFTDOWN;
-
-        SendInput(2, inputs, sizeof(INPUT));
-    });
-
-    QObject::connect(&hotkeyHandler, &HotkeyHandler::resizeHotKeyPressed, [&](){
-        qDebug() << "Resize hotkey pressed!";
-
-        HWND hwnd = GetForegroundWindow();
-        if (!hwnd) return;
-
-        RECT window_rect;
-        if (!GetWindowRect(hwnd, &window_rect)) return;
-
-        // Setting the cursor position
-        SetCursorPos(window_rect.right - 1, window_rect.bottom - 1);
-
-        INPUT inputs[2] = {0};
-
-        // Clicking the left mouse button
-        inputs[0].type = INPUT_MOUSE;
-        inputs[0].mi.dwFlags = MOUSEEVENTF_LEFTDOWN;
-
-        SendInput(2, inputs, sizeof(INPUT));
-    });
+    QObject::connect(&hotkeyHandler, &HotkeyHandler::moveHotKeyPressed, &wpc, &WindowPositionController::moveWindow);
+    QObject::connect(&hotkeyHandler, &HotkeyHandler::resizeHotKeyPressed, &wpc, &WindowPositionController::resizeWindow);
+    QObject::connect(&hotkeyHandler, &HotkeyHandler::escHotKeyPressed, &wpc, &WindowPositionController::onEsc);
 
     return app.exec();
 }

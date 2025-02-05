@@ -18,13 +18,15 @@ public:
 signals:
     void moveHotKeyPressed();
     void resizeHotKeyPressed();
+    void escHotKeyPressed();
 
 protected:
     bool nativeEventFilter(const QByteArray &eventType, void *message, qintptr *result) override;
 
 private:
-    int m_moveHotkeyId = 1; // Уникальный ID для горячей клавиши
-    int m_resizeHotkeyId = 2; // Уникальный ID для горячей клавиши
+    const int m_moveHotkeyId = 1;
+    const int m_resizeHotkeyId = 2;
+    const int m_escHotkeyId = 3;
 };
 
 #endif // HOTKEYHANDLER_H

@@ -9,8 +9,6 @@ HotkeyHandler::~HotkeyHandler()
 
 bool HotkeyHandler::registerHotKey(int modifier, int key, unsigned hotkeyID)
 {
-    // if (m_isRegistered) return false;
-
     UINT fsModifiers = 0;
     if (modifier & MOD_ALT) fsModifiers |= MOD_ALT;
     if (modifier & MOD_CONTROL) fsModifiers |= MOD_CONTROL;
@@ -18,7 +16,7 @@ bool HotkeyHandler::registerHotKey(int modifier, int key, unsigned hotkeyID)
     if (modifier & MOD_WIN) fsModifiers |= MOD_WIN;
 
     bool registered = RegisterHotKey(
-        nullptr,        // Используем NULL для глобальной регистрации
+        nullptr,
         hotkeyID,
         fsModifiers,
         key
@@ -29,9 +27,10 @@ bool HotkeyHandler::registerHotKey(int modifier, int key, unsigned hotkeyID)
 
 bool HotkeyHandler::unregisterHotKey()
 {
-    // if (!m_isRegistered) return false;
-    return UnregisterHotKey(nullptr, m_moveHotkeyId);
-    return UnregisterHotKey(nullptr, m_resizeHotkeyId);
+    UnregisterHotKey(nullptr, m_moveHotkeyId);
+    UnregisterHotKey(nullptr, m_resizeHotkeyId);
+    UnregisterHotKey(nullptr, m_escHotkeyId);
+    return true;
 }
 
 bool HotkeyHandler::nativeEventFilter(const QByteArray &eventType, void *message, qintptr *result)
@@ -45,6 +44,9 @@ bool HotkeyHandler::nativeEventFilter(const QByteArray &eventType, void *message
             return true;
         } else if (msg->wParam == m_resizeHotkeyId) {
             emit resizeHotKeyPressed();
+            return true;
+        } else if (msg->wParam == m_escHotkeyId) {
+            emit escHotKeyPressed();
             return true;
         }
     }

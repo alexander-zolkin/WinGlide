@@ -18,6 +18,7 @@ qt_add_qml_module(appWinGlide
     QML_FILES
         Main.qml
         SOURCES hotkeyhandler.h hotkeyhandler.cpp
+        SOURCES windowpositioncontroller.h windowpositioncontroller.cpp
 )
 
 set_target_properties(appWinGlide PROPERTIES
