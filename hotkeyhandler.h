@@ -8,12 +8,16 @@
 class HotkeyHandler : public QObject, public QAbstractNativeEventFilter
 {
     Q_OBJECT
-public:
-    explicit HotkeyHandler(QObject *parent = nullptr);
-    ~HotkeyHandler();
 
+public:
+    static const uint moveHotkeyId = 0;
+    static const uint resizeHotkeyId = 1;
+    static const uint escHotkeyId = 2;
+    
+    static HotkeyHandler& getInstance();
+    
     bool registerHotKey(int modifier, int key, unsigned hotkeyID);
-    bool unregisterHotKey();
+    bool unregisterAllHotKeys();
 
 signals:
     void moveHotKeyPressed();
@@ -24,9 +28,10 @@ protected:
     bool nativeEventFilter(const QByteArray &eventType, void *message, qintptr *result) override;
 
 private:
-    const int m_moveHotkeyId = 1;
-    const int m_resizeHotkeyId = 2;
-    const int m_escHotkeyId = 3;
+    explicit HotkeyHandler(QObject *parent = nullptr);
+    ~HotkeyHandler();
+    HotkeyHandler(const HotkeyHandler&) = delete;
+    HotkeyHandler& operator=(const HotkeyHandler&) = delete;
 };
 
 #endif // HOTKEYHANDLER_H

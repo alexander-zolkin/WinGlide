@@ -1,10 +1,16 @@
 #include "hotkeyhandler.h"
 
+HotkeyHandler& HotkeyHandler::getInstance()
+{
+    static HotkeyHandler instance;
+    return instance;
+}
+
 HotkeyHandler::HotkeyHandler(QObject *parent) : QObject(parent) {}
 
 HotkeyHandler::~HotkeyHandler()
 {
-    unregisterHotKey();
+    unregisterAllHotKeys();
 }
 
 bool HotkeyHandler::registerHotKey(int modifier, int key, unsigned hotkeyID)
@@ -25,30 +31,29 @@ bool HotkeyHandler::registerHotKey(int modifier, int key, unsigned hotkeyID)
     return registered;
 }
 
-bool HotkeyHandler::unregisterHotKey()
+bool HotkeyHandler::unregisterAllHotKeys()
 {
-    UnregisterHotKey(nullptr, m_moveHotkeyId);
-    UnregisterHotKey(nullptr, m_resizeHotkeyId);
-    UnregisterHotKey(nullptr, m_escHotkeyId);
+    UnregisterHotKey(nullptr, moveHotkeyId);
+    UnregisterHotKey(nullptr, resizeHotkeyId);
+    UnregisterHotKey(nullptr, escHotkeyId);
     return true;
 }
 
 bool HotkeyHandler::nativeEventFilter(const QByteArray &eventType, void *message, qintptr *result)
 {
     MSG* msg = static_cast<MSG*>(message);
-    if (msg->message == WM_HOTKEY)
-    {
-        if (msg->wParam == m_moveHotkeyId)
-        {
+    if (msg->message == WM_HOTKEY) {
+        if (msg->wParam == moveHotkeyId) {
             emit moveHotKeyPressed();
             return true;
-        } else if (msg->wParam == m_resizeHotkeyId) {
+        } else if (msg->wParam == resizeHotkeyId) {
             emit resizeHotKeyPressed();
             return true;
-        } else if (msg->wParam == m_escHotkeyId) {
+        } else if (msg->wParam == escHotkeyId) {
             emit escHotKeyPressed();
             return true;
         }
     }
+
     return false;
 }

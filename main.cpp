@@ -9,25 +9,24 @@
 int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);
-
-    HotkeyHandler hotkeyHandler;
+    HotkeyHandler& hotkeyHandler = HotkeyHandler::getInstance();
     QGuiApplication::instance()->installNativeEventFilter(&hotkeyHandler);
+    WindowPositionController& wpc = WindowPositionController::getInstance();
 
-    WindowPositionController wpc;
-
-    if (!hotkeyHandler.registerHotKey(MOD_WIN | MOD_ALT, 'V', 1)) {
-        auto lastError = GetLastError();
-        qDebug() << "Не удалось зарегистрировать горячую клавишу Win+Alt+V. Код ошибки:" << lastError;
+    DWORD lastError;
+    if (!hotkeyHandler.registerHotKey(MOD_WIN | MOD_ALT, 'V', HotkeyHandler::moveHotkeyId)) {
+        lastError = GetLastError();
+        qDebug() << "Can't register Win+Alt+V. Error code:" << lastError;
     }
 
-    if (!hotkeyHandler.registerHotKey(MOD_WIN | MOD_ALT, 'C', 2)) {
-        auto lastError = GetLastError();
-        qDebug() << "Не удалось зарегистрировать горячую клавишу Win+Alt+C. Код ошибки:" << lastError;
+    if (!hotkeyHandler.registerHotKey(MOD_WIN | MOD_ALT, 'C', HotkeyHandler::resizeHotkeyId)) {
+        lastError = GetLastError();
+        qDebug() << "Can't register Win+Alt+C. Error code:" << lastError;
     }
 
-    if (!hotkeyHandler.registerHotKey(0, VK_ESCAPE, 3)) {
-        auto lastError = GetLastError();
-        qDebug() << "Не удалось зарегистрировать горячую клавишу Escape. Код ошибки:" << lastError;
+    if (!hotkeyHandler.registerHotKey(0, VK_ESCAPE, HotkeyHandler::escHotkeyId)) {
+        lastError = GetLastError();
+        qDebug() << "Can't register Escape. Error code:" << lastError;
     }
 
     QQmlApplicationEngine engine;

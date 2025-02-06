@@ -1,15 +1,20 @@
-#include <windows.h>
+    #include <windows.h>
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 #include <QDebug>
 #include <QTimer>
 #include "windowpositioncontroller.h"
 
+WindowPositionController& WindowPositionController::getInstance()
+{
+    static WindowPositionController instance;
+    return instance;
+}
 
 WindowPositionController::WindowPositionController(QObject *parent)
     : QObject{parent}
 {
-    positionControllTimer.setInterval(10);
+    positionControllTimer.setInterval(timerInterval);
 }
 
 void WindowPositionController::onResizeTimeout()
@@ -25,8 +30,8 @@ void WindowPositionController::onResizeTimeout()
     POINT pt;
     if (GetCursorPos(&pt)) {
         qDebug() << "Mouse position:" << pt.x << pt.y;
-        SetWindowPos(hwnd, NULL, window_rect.left, window_rect.top, pt.x - window_rect.left + 10,
-                     pt.y - window_rect.top + 10, SWP_NOZORDER);
+        SetWindowPos(hwnd, NULL, window_rect.left, window_rect.top, pt.x - window_rect.left + windowEdgeOffset,
+                     pt.y - window_rect.top + windowEdgeOffset, SWP_NOZORDER);
     }
 }
 
@@ -43,7 +48,6 @@ void WindowPositionController::onMoveTimeout()
     POINT pt;
     if (GetCursorPos(&pt)) {
         qDebug() << "Mouse position:" << pt.x << pt.y;
-
         int windowWidth = window_rect.right - window_rect.left;
         int windowHeight = window_rect.bottom - window_rect.top;
         SetWindowPos(hwnd, NULL, pt.x - windowWidth / 2, pt.y - windowHeight / 2, window_rect.right - window_rect.left,
@@ -61,7 +65,7 @@ void WindowPositionController::resizeWindow()
     RECT window_rect;
     if (!GetWindowRect(hwnd, &window_rect)) return;
 
-    SetCursorPos(window_rect.right - 10, window_rect.bottom - 10);
+    SetCursorPos(window_rect.right - windowEdgeOffset, window_rect.bottom - windowEdgeOffset);
 
     QObject::connect(&positionControllTimer, &QTimer::timeout, this, &WindowPositionController::onResizeTimeout);
 
